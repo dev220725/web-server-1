@@ -1,0 +1,49 @@
+version: "3.3"
+
+services:
+
+  web:
+    build: apache
+    container_name: ubuntu_20_apache_php
+    working_dir: /var/www/html
+    volumes:
+      - ./html:/var/www/html
+      - ./apache/proxy.conf:/etc/apache2/sites-enabled/000-default.conf
+    links: 
+      - db:db
+    ports:
+      - "80:80"
+    networks:
+      - backend
+
+  db:
+    image: mariadb:10.7
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - backend
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+        - db:db
+    ports:
+        - 8000:80
+    environment:
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - backend
+      
+networks:
+  backend:
+    driver: bridge
